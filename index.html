@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rangers Tuloskorttigeneraattori</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Teko:wght@700&family=Montserrat:ital,wght@0,700;0,800;1,600&display=swap');
+    
+    .font-score { font-family: 'Teko', sans-serif; }
+    .font-period { font-family: 'Montserrat', sans-serif; font-style: italic; }
+    .font-team { font-family: 'Montserrat', sans-serif; font-weight: 800; text-transform: uppercase; }
+  </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen pb-12 font-sans">
+
+  <header class="bg-slate-800 border-b border-slate-700 py-4 px-6 mb-8 text-center shadow-lg">
+    <h1 class="text-2xl font-bold text-sky-400">Rangers Tuloskortti</h1>
+    <p class="text-xs text-slate-400 mt-1">Luo ja lataa ottelutulos sosiaaliseen mediaan</p>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- LOMAKE / SÄÄDÖT -->
+    <div class="lg:col-span-5 bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-5 h-fit">
+      
+      <!-- Formaatti -->
+      <div>
+        <label class="block text-xs font-semibold mb-2 text-slate-300">Formaatti / Kuvasuhde</label>
+        <div class="grid grid-cols-3 gap-2">
+          <button id="btnAspectStory" onclick="setAspectRatio('story')" class="py-2 rounded-lg bg-sky-600 font-medium text-xs text-white">Tarina (9:16)</button>
+          <button id="btnAspectPortrait" onclick="setAspectRatio('portrait')" class="py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-medium text-xs text-slate-200">Postaus (4:5)</button>
+          <button id="btnAspectSquare" onclick="setAspectRatio('square')" class="py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-medium text-xs text-slate-200">Neliö (1:1)</button>
+        </div>
+      </div>
+
+      <!-- Taustakuva & Kroppaus -->
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-300">Taustakuva & Rajaus</label>
+        <input type="file" id="inputBg" accept="image/*" class="block w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-sky-600 file:text-white file:font-semibold hover:file:bg-sky-500 cursor-pointer">
+        
+        <div class="bg-slate-900 p-3 rounded-lg space-y-2 border border-slate-700 text-xs">
+          <div>
+            <div class="flex justify-between text-slate-400 mb-1"><span>Zoom</span><span id="zoomVal">100%</span></div>
+            <input type="range" id="bgScale" min="100" max="250" value="100" class="w-full accent-sky-500">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <span class="text-slate-400 block mb-1">Siirto X</span>
+              <input type="range" id="bgPosX" min="-200" max="200" value="0" class="w-full accent-sky-500">
+            </div>
+            <div>
+              <span class="text-slate-400 block mb-1">Siirto Y</span>
+              <input type="range" id="bgPosY" min="-200" max="200" value="0" class="w-full accent-sky-500">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Joukkueet -->
+      <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-700">
+        <div>
+          <label class="block text-xs font-semibold mb-1 text-slate-300">KOTI</label>
+          <input type="text" id="homeName" value="RANGERS" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white mb-2">
+          <button onclick="setTeam('home')" class="w-full bg-slate-700 hover:bg-slate-600 text-xs py-1 rounded text-sky-300 mb-2">★ Rangers</button>
+          
+          <div class="flex items-center space-x-2">
+            <input type="file" id="homeLogo" accept="image/*" class="text-[10px] text-slate-400 w-full">
+            <button onclick="clearLogo('home')" class="px-2 py-1 bg-rose-900/60 hover:bg-rose-800 border border-rose-700 text-rose-300 text-[10px] font-bold rounded">✕ Poista</button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1 text-slate-300">VIERAS</label>
+          <input type="text" id="awayName" value="KARHUT" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white mb-2">
+          <button onclick="setTeam('away')" class="w-full bg-slate-700 hover:bg-slate-600 text-xs py-1 rounded text-sky-300 mb-2">★ Rangers</button>
+          
+          <div class="flex items-center space-x-2">
+            <input type="file" id="awayLogo" accept="image/*" class="text-[10px] text-slate-400 w-full">
+            <button onclick="clearLogo('away')" class="px-2 py-1 bg-rose-900/60 hover:bg-rose-800 border border-rose-700 text-rose-300 text-[10px] font-bold rounded">✕ Poista</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tulokset -->
+      <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-700">
+        <div>
+          <label class="block text-xs font-semibold mb-1 text-slate-300">Koti Maalit</label>
+          <input type="number" id="homeScore" value="4" min="0" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-base font-bold text-center text-white">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1 text-slate-300">Vieras Maalit</label>
+          <input type="number" id="awayScore" value="1" min="0" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-base font-bold text-center text-white">
+        </div>
+      </div>
+
+      <!-- Erälukemat -->
+      <div class="pt-2 border-t border-slate-700">
+        <label class="block text-xs font-semibold mb-1 text-slate-300">Erälukemat (Tyhjä = piilotettu)</label>
+        <input type="text" id="periodScores" value="(2-0, 1-0, 1-1)" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs text-white" placeholder="esim. (2-0, 1-0, 1-1)">
+      </div>
+
+      <!-- Värit + Pikanapit -->
+      <div class="pt-2 border-t border-slate-700 space-y-3">
+        <label class="block text-xs font-semibold text-slate-300">Värit & Pikanapit</label>
+        <div class="flex space-x-2">
+          <button onclick="setQuickColor('#ffffff', '#000000')" class="px-2 py-1 bg-white text-black text-xs font-bold rounded">Valkoinen</button>
+          <button onclick="setQuickColor('#21409A', '#ffffff')" class="px-2 py-1 bg-[#21409A] text-white text-xs font-bold rounded">Rangers Sininen</button>
+          <button onclick="setQuickColor('#000000', '#ffffff')" class="px-2 py-1 bg-black text-white text-xs font-bold rounded border border-slate-600">Musta</button>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <span class="text-[10px] text-slate-400">Teksti</span>
+            <input type="color" id="textColor" value="#21409A" class="w-full h-8 bg-slate-900 border border-slate-700 rounded p-1 cursor-pointer">
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400">Reunus</span>
+            <input type="color" id="strokeColor" value="#ffffff" class="w-full h-8 bg-slate-900 border border-slate-700 rounded p-1 cursor-pointer">
+          </div>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <button onclick="exportImage()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-base text-white rounded-xl shadow-lg transition">
+        Luo & Lataa Kuva HD
+      </button>
+    </div>
+
+    <!-- ESIKATSELU (Canvas) -->
+    <div class="lg:col-span-7 flex flex-col items-center justify-start">
+      <h2 class="text-xs font-semibold text-slate-400 mb-3">Esikatselu (HD Canvas)</h2>
+      
+      <div class="relative overflow-hidden rounded-lg shadow-2xl border border-slate-700 bg-slate-950 flex justify-center items-center">
+        <canvas id="mainCanvas" class="max-w-full h-auto cursor-pointer" style="max-height: 75vh;"></canvas>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL -->
+  <div id="exportModal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col items-center justify-center p-4 overflow-y-auto">
+    <div class="max-w-md w-full bg-slate-800 p-4 rounded-xl text-center space-y-3">
+      <h3 class="text-base font-bold text-sky-400">Valmis HD Tuloskortti</h3>
+      <p class="text-xs text-slate-300">Paina kuvaa <b>pitkään</b> ja valitse <b>"Tallenna kuviin"</b>.</p>
+      
+      <div id="modalImageContainer" class="rounded-lg overflow-hidden border border-slate-700 shadow-2xl"></div>
+
+      <button onclick="closeModal()" class="w-full py-2 bg-slate-700 hover:bg-slate-600 font-semibold text-xs rounded-lg">Sulje</button>
+    </div>
+  </div>
+
+  <script>
+    let currentAspect = 'story';
+    let canvasW = 1080;
+    let canvasH = 1920;
+
+    const bgImg = new Image();
+    bgImg.crossOrigin = "anonymous";
+    bgImg.src = 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1080&q=80';
+
+    const homeLogoImg = new Image(); homeLogoImg.crossOrigin = "anonymous";
+    const awayLogoImg = new Image(); awayLogoImg.crossOrigin = "anonymous";
+    let hasHomeLogo = false;
+    let hasAwayLogo = false;
+
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const homeScoreInput = document.getElementById('homeScore');
+    const awayScoreInput = document.getElementById('awayScore');
+    const periodScoresInput = document.getElementById('periodScores');
+    const homeNameInput = document.getElementById('homeName');
+    const awayNameInput = document.getElementById('awayName');
+
+    const textColorInput = document.getElementById('textColor');
+    const strokeColorInput = document.getElementById('strokeColor');
+
+    const bgScale = document.getElementById('bgScale');
+    const bgPosX = document.getElementById('bgPosX');
+    const bgPosY = document.getElementById('bgPosY');
+    const zoomVal = document.getElementById('zoomVal');
+
+    bgImg.onload = () => render();
+    homeLogoImg.onload = () => render();
+    awayLogoImg.onload = () => render();
+
+    document.fonts.ready.then(() => render());
+
+    function render() {
+      canvas.width = canvasW;
+      canvas.height = canvasH;
+
+      ctx.clearRect(0, 0, canvasW, canvasH);
+
+      // 1. TAUSTAKUVA
+      if (bgImg.complete && bgImg.naturalWidth > 0) {
+        const scaleVal = bgScale.value / 100;
+        const posX = parseInt(bgPosX.value) * (canvasW / 360);
+        const posY = parseInt(bgPosY.value) * (canvasH / 640);
+
+        const imgRatio = bgImg.naturalWidth / bgImg.naturalHeight;
+        const canvasRatio = canvasW / canvasH;
+
+        let drawW, drawH;
+        if (imgRatio > canvasRatio) {
+          drawH = canvasH;
+          drawW = canvasH * imgRatio;
+        } else {
+          drawW = canvasW;
+          drawH = canvasW / imgRatio;
+        }
+
+        drawW *= scaleVal;
+        drawH *= scaleVal;
+
+        const x = (canvasW - drawW) / 2 + posX;
+        const y = (canvasH - drawH) / 2 + posY;
+
+        ctx.drawImage(bgImg, x, y, drawW, drawH);
+      } else {
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(0, 0, canvasW, canvasH);
+      }
+
+      // 2. GRADIENTTI
+      const gradHeight = canvasH * 0.45;
+      const grad = ctx.createLinearGradient(0, canvasH - gradHeight, 0, canvasH);
+      grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.6)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, canvasH - gradHeight, canvasW, gradHeight);
+
+      // 3. TEKSTIT JA LOGOT
+      const fill = textColorInput.value;
+      const stroke = strokeColorInput.value;
+      const hName = (homeNameInput.value || '').trim().toUpperCase();
+      const aName = (awayNameInput.value || '').trim().toUpperCase();
+      const scoreStr = `${homeScoreInput.value || '0'}-${awayScoreInput.value || '0'}`;
+      const periodStr = periodScoresInput.value.trim();
+
+      const bottomCenterY = canvasH - (canvasH * 0.12);
+
+      // A) TULOSNUMERO (Keskellä)
+      const scoreFontSize = Math.round(canvasW * 0.18);
+      ctx.font = `700 ${scoreFontSize}px 'Teko', sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const scoreWidth = ctx.measureText(scoreStr).width;
+
+      ctx.lineWidth = Math.round(scoreFontSize * 0.04);
+      ctx.strokeStyle = stroke;
+      ctx.strokeText(scoreStr, canvasW / 2, bottomCenterY);
+
+      ctx.fillStyle = fill;
+      ctx.fillText(scoreStr, canvasW / 2, bottomCenterY);
+
+      // B) LOGOT TAI TEKSTIT NUMEROIDEN SIVUILLA
+      const hasAnyLogo = hasHomeLogo || hasAwayLogo;
+
+      if (hasAnyLogo) {
+        // LOGON KOKO: Pienennetty hieman tulosnumerosta (n. 13% canvasin leveydestä)
+        const logoSize = Math.round(canvasW * 0.13); 
+        const logoPadding = 35;
+        const homeCenterX = (canvasW / 2) - (scoreWidth / 2) - logoPadding - (logoSize / 2);
+        const awayCenterX = (canvasW / 2) + (scoreWidth / 2) + logoPadding + (logoSize / 2);
+
+        if (hasHomeLogo && homeLogoImg.complete) {
+          ctx.drawImage(homeLogoImg, homeCenterX - (logoSize / 2), bottomCenterY - (logoSize / 2), logoSize, logoSize);
+        }
+        if (hasAwayLogo && awayLogoImg.complete) {
+          ctx.drawImage(awayLogoImg, awayCenterX - (logoSize / 2), bottomCenterY - (logoSize / 2), logoSize, logoSize);
+        }
+
+        // Tekstit logojen yläpuolella
+        if (hName || aName) {
+          const teamY = bottomCenterY - (logoSize / 2) - 20;
+          const maxLen = Math.max(hName.length, aName.length);
+          let teamFontSize = Math.round(canvasW * 0.038);
+          if (maxLen > 9) teamFontSize = Math.round(canvasW * 0.032);
+
+          ctx.font = `800 ${teamFontSize}px 'Montserrat', sans-serif`;
+          ctx.lineWidth = Math.round(teamFontSize * 0.08);
+          ctx.strokeStyle = stroke;
+          ctx.fillStyle = fill;
+          ctx.textAlign = 'center';
+
+          if (hName) { ctx.strokeText(hName, homeCenterX, teamY); ctx.fillText(hName, homeCenterX, teamY); }
+          if (aName) { ctx.strokeText(aName, awayCenterX, teamY); ctx.fillText(aName, awayCenterX, teamY); }
+        }
+
+      } else {
+        // EI LOGOJA -> Tekstit suoraan numeroiden sivuilla samalla keskilinjalla
+        if (hName || aName) {
+          const maxLen = Math.max(hName.length, aName.length);
+          let teamFontSize = Math.round(canvasW * 0.055);
+          if (maxLen > 7) teamFontSize = Math.round(canvasW * 0.045);
+          if (maxLen > 11) teamFontSize = Math.round(canvasW * 0.036);
+
+          ctx.font = `800 ${teamFontSize}px 'Montserrat', sans-serif`;
+          ctx.lineWidth = Math.round(teamFontSize * 0.08);
+          ctx.strokeStyle = stroke;
+          ctx.fillStyle = fill;
+
+          const padding = 30;
+          const homeX = (canvasW / 2) - (scoreWidth / 2) - padding;
+          const awayX = (canvasW / 2) + (scoreWidth / 2) + padding;
+
+          ctx.textAlign = 'right';
+          ctx.strokeText(hName, homeX, bottomCenterY + (scoreFontSize * 0.05));
+          ctx.fillText(hName, homeX, bottomCenterY + (scoreFontSize * 0.05));
+
+          ctx.textAlign = 'left';
+          ctx.strokeText(aName, awayX, bottomCenterY + (scoreFontSize * 0.05));
+          ctx.fillText(aName, awayX, bottomCenterY + (scoreFontSize * 0.05));
+        }
+      }
+
+      // C) ERÄLUKEMAT (Alapuolella)
+      if (periodStr) {
+        const periodY = bottomCenterY + (scoreFontSize * 0.55);
+        const periodFontSize = Math.round(canvasW * 0.032);
+
+        ctx.font = `600 italic ${periodFontSize}px 'Montserrat', sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.lineWidth = Math.round(periodFontSize * 0.08);
+        ctx.strokeStyle = stroke;
+        ctx.fillStyle = fill;
+
+        ctx.strokeText(periodStr, canvasW / 2, periodY);
+        ctx.fillText(periodStr, canvasW / 2, periodY);
+      }
+    }
+
+    // Tapahtumakuuntelijat & Logojen tyhjennys
+    [bgScale, bgPosX, bgPosY].forEach(el => {
+      el.addEventListener('input', () => {
+        zoomVal.innerText = `${bgScale.value}%`;
+        render();
+      });
+    });
+
+    [homeScoreInput, awayScoreInput, periodScoresInput, homeNameInput, awayNameInput, textColorInput, strokeColorInput].forEach(el => {
+      el.addEventListener('input', () => render());
+    });
+
+    function setQuickColor(textHex, strokeHex) {
+      textColorInput.value = textHex;
+      strokeColorInput.value = strokeHex;
+      render();
+    }
+
+    document.getElementById('inputBg').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        bgImg.src = URL.createObjectURL(file);
+      }
+    });
+
+    document.getElementById('homeLogo').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        hasHomeLogo = true;
+        homeLogoImg.src = URL.createObjectURL(file);
+      }
+    });
+
+    document.getElementById('awayLogo').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        hasAwayLogo = true;
+        awayLogoImg.src = URL.createObjectURL(file);
+      }
+    });
+
+    function clearLogo(side) {
+      if (side === 'home') {
+        hasHomeLogo = false;
+        homeLogoImg.src = '';
+        document.getElementById('homeLogo').value = '';
+      } else {
+        hasAwayLogo = false;
+        awayLogoImg.src = '';
+        document.getElementById('awayLogo').value = '';
+      }
+      render();
+    }
+
+    function setTeam(side) {
+      if (side === 'home') homeNameInput.value = "RANGERS";
+      else awayNameInput.value = "RANGERS";
+      render();
+    }
+
+    function setAspectRatio(type) {
+      currentAspect = type;
+      
+      const btnStory = document.getElementById('btnAspectStory');
+      const btnPortrait = document.getElementById('btnAspectPortrait');
+      const btnSquare = document.getElementById('btnAspectSquare');
+
+      btnStory.className = "py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-medium text-xs text-slate-200";
+      btnPortrait.className = "py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-medium text-xs text-slate-200";
+      btnSquare.className = "py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-medium text-xs text-slate-200";
+
+      if (type === 'story') {
+        canvasW = 1080; canvasH = 1920;
+        btnStory.className = "py-2 rounded-lg bg-sky-600 font-medium text-xs text-white";
+      } else if (type === 'portrait') {
+        canvasW = 1080; canvasH = 1350;
+        btnPortrait.className = "py-2 rounded-lg bg-sky-600 font-medium text-xs text-white";
+      } else {
+        canvasW = 1080; canvasH = 1080;
+        btnSquare.className = "py-2 rounded-lg bg-sky-600 font-medium text-xs text-white";
+      }
+
+      render();
+    }
+
+    function exportImage() {
+      const imageData = canvas.toDataURL('image/png');
+      const modal = document.getElementById('exportModal');
+      const container = document.getElementById('modalImageContainer');
+      container.innerHTML = `<img src="${imageData}" class="w-full h-auto max-h-[70vh] object-contain mx-auto rounded-lg shadow-xl" alt="Tuloskortti">`;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('exportModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    render();
+  </script>
+</body>
+</html>
